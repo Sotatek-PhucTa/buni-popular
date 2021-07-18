@@ -36,7 +36,7 @@ xcontext("StakingRewardsFactory create factory", async() => {
         stakingTokens = fixture.stakingTokens;
     });
 
-    xcontext("#deploy", async() => {
+    context("#deploy", async() => {
         it('pushes the token into the list', async() => {
             await stakingRewardsFactory.deploy(stakingTokens[1].address, 100000, REWARD_DURATION, VESTING, SPLIT);
             expect(await stakingRewardsFactory.stakingTokens(0)).to.eq(stakingTokens[1].address);

@@ -57,6 +57,6 @@ export async function mineBlock(provider: providers.Web3Provider, timestamp: num
     return provider.send('evm_mine', [timestamp]);
 }
 
-export const REWARD_DURATION = 604800
-export const VESTING = 345600
-export const SPLIT = 4
+export const REWARD_DURATION = 604800;
+export const VESTING = 259200;
+export const SPLIT = 4;

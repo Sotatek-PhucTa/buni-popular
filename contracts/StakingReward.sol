@@ -179,6 +179,8 @@ contract StakingReward is IStakingReward, RewardsDistributionRecipient, Reentran
             uint256 claimedSplits = hasClaimed[_msgSender()];
             uint256 currentDate = block.timestamp;
             uint256 currentSplits = currentDate.sub(periodFinish).div(splitWindow).add(1);
+            if (currentSplits > split)
+                currentSplits = split;
 
             if (totalEarnedRewards[_msgSender()] == 0) 
                 totalEarnedRewards[_msgSender()] = rewards[_msgSender()];

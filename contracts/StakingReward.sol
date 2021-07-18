@@ -1,4 +1,5 @@
-pragma solidity=0.8.4;
+pragma solidity=0.6.11;
+pragma experimental ABIEncoderV2;
 
 import "@pancakeswap/pancake-swap-lib/contracts/math/SafeMath.sol";
 import "@pancakeswap/pancake-swap-lib/contracts/token/BEP20/SafeBEP20.sol";
@@ -77,7 +78,7 @@ contract StakingReward is IStakingReward, RewardsDistributionRecipient, Reentran
         rewardDuration = _rewardDuration;
         vestingPeriod = _vestingPeriod;
         split = _split;
-        splitWindow = vestingPeriod.div(split);
+        splitWindow = _vestingPeriod.div(_split);
         _initializeEIP712("PopularV1");
     }
 
@@ -121,7 +122,7 @@ contract StakingReward is IStakingReward, RewardsDistributionRecipient, Reentran
 
     /*=============================MUTATIVE FUNCTIONS===============================*/
     
-    function stakeWithPermit(uint256 amount, uint256 deadline, uint8 v, bytes32, r, bytes32 s)
+    function stakeWithPermit(uint256 amount, uint256 deadline, uint8 v, bytes32 r, bytes32 s)
         external nonReentrant updateReward(_msgSender()) 
     {
         require(amount > 0, "Cannot stake 0");
@@ -134,7 +135,7 @@ contract StakingReward is IStakingReward, RewardsDistributionRecipient, Reentran
         emit Staked(_msgSender(), amount);
     }
 
-    function stake(uint256 amount) external override nonReentrat updateReward(_msgSender()) {
+    function stake(uint256 amount) external override nonReentrant updateReward(_msgSender()) {
         require(amount > 0, "Cannot withdraw 0");
         _totalSupply = _totalSupply.add(amount);
         _balances[_msgSender()] = _balances[_msgSender()].add(amount);
@@ -170,8 +171,10 @@ contract StakingReward is IStakingReward, RewardsDistributionRecipient, Reentran
         if (!info.hasOptForVesting) {
             reward = rewards[_msgSender()].div(2);
             totalBurnableToken = totalBurnableToken.add(rewards[_msgSender()].sub(reward));
-            rewardToken.safeTransfer(_msgSender, reward);
+            rewardToken.safeTransfer(_msgSender(), reward);
             rewards[_msgSender()] = 0;
+            hasClaimed[_msgSender()] = split;
+            emit RewardPaid(_msgSender(), reward);
         } else {
             uint256 claimedSplits = hasClaimed[_msgSender()];
             uint256 currentDate = block.timestamp;
@@ -188,7 +191,7 @@ contract StakingReward is IStakingReward, RewardsDistributionRecipient, Reentran
                 hasClaimed[_msgSender()] = currentSplits;
             if (reward > 0) {
                 rewards[_msgSender()] = rewards[_msgSender()].sub(reward);
-                rewardToken.safeTransfer(_msgSender, reward);
+                rewardToken.safeTransfer(_msgSender(), reward);
                 emit RewardPaid(_msgSender(), reward);
             } 
         }
@@ -201,33 +204,33 @@ contract StakingReward is IStakingReward, RewardsDistributionRecipient, Reentran
     }
 
     /*==============================RESTRICTED FUNCTIONS==========================*/
-    function notifyRewardAmount(uint256 reward) external override onlyRewardsDistribution updateReward(address(0)) {
+    function notifyRewardAmount(uint256 reward) external override onlyRewardDistributor updateReward(address(0)) {
         if (block.timestamp >= periodFinish) {
-            rewardRate = reward.div(rewardsDuration);
+            rewardRate = reward.div(rewardDuration);
         } else {
             uint256 remaining = periodFinish.sub(block.timestamp);
             uint256 leftover = remaining.mul(rewardRate);
-            rewardRate = reward.add(leftover).div(rewardsDuration);
+            rewardRate = reward.add(leftover).div(rewardDuration);
         }
 
         // Ensure the provided reward amount is not more than the balance in the contract.
         // This keeps the reward rate in the right range, preventing overflows due to
         // very high values of rewardRate in the earned and rewardsPerToken functions;
         // Reward + leftover must be less than 2^256 / 10^18 to avoid overflow.
-        uint256 balance = rewardsToken.balanceOf(address(this));
-        require(rewardRate <= balance.div(rewardsDuration), 'Provided reward too high');
+        uint256 balance = rewardToken.balanceOf(address(this));
+        require(rewardRate <= balance.div(rewardDuration), 'Provided reward too high');
 
-        lastUpdateTime = block.timestamp;
-        periodFinish = block.timestamp.add(rewardsDuration);
+        lastUpdatedTime = block.timestamp;
+        periodFinish = block.timestamp.add(rewardDuration);
         emit RewardAdded(reward);
     }
 
-    function rescueBurnableFunds(address receiver) external onlyRewardsDistribution {
-        rewardsToken.transfer(receiver, totalBurnableTokens);
+    function rescueBurnableFunds(address receiver) external onlyRewardDistributor {
+        rewardToken.transfer(receiver, totalBurnableToken);
     }
 
-    function rescueFunds(address tokenAddress, address receiver) external onlyRewardsDistribution {
+    function rescueFunds(address tokenAddress, address receiver) external onlyRewardDistributor {
         require(tokenAddress != address(stakingToken), 'StakingRewards: rescue of staking token not allowed');
-        IERC20(tokenAddress).transfer(receiver, IERC20(tokenAddress).balanceOf(address(this)));
+        IBEP20(tokenAddress).transfer(receiver, IBEP20(tokenAddress).balanceOf(address(this)));
     }
 }

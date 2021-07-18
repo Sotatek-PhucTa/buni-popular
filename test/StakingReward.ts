@@ -19,7 +19,7 @@ context('StakingReward', async() => {
         },
     });
 
-    const [wallet, staker, stakerSecond] = provider.getWallets();
+    const [wallet, staker, secondStaker] = provider.getWallets();
     const loadFixture = createFixtureLoader([wallet], provider);
 
     let stakingReward: Contract;
@@ -160,7 +160,7 @@ context('StakingReward', async() => {
         await stakingToken.connect(staker).approve(stakingReward.address, stake);
         await stakingReward.connect(staker).stake(stake);
 
-        const { vestingEndTime, rewardEndTime, totalSplits, splitWindow } = await start(reward);
+        const { rewardEndTime, totalSplits, splitWindow } = await start(reward);
 
 
         for (let i = 0; i < totalSplits.toNumber(); i++) {
@@ -217,5 +217,39 @@ context('StakingReward', async() => {
         const rewardAmount = await rewardToken.balanceOf(staker.address);
 
         expect(rewardAmount).to.be.eq(reward.div(REWARD_DURATION).mul(stakeEndTime.sub(stakeStartTime)).div(SPLIT));
+    });
+
+    it('Two stakers', async() => {
+        const stake = expandTo18Decimals(2);
+        await stakingToken.transfer(staker.address, stake);
+        await stakingToken.connect(staker).approve(stakingReward.address, stake);
+        await stakingReward.connect(staker).stake(stake);
+
+        const { startTime, vestingEndTime, rewardEndTime } = await start(reward);
+        await stakingReward.connect(staker).setVestingConfig(true);
+
+        await mineBlock(provider, startTime.add(rewardEndTime.sub(startTime).div(2)).toNumber());
+
+        //stake with second staker
+        await stakingToken.transfer(secondStaker.address, stake);
+        await stakingToken.connect(secondStaker).approve(stakingReward.address, stake);
+        await stakingReward.connect(secondStaker).stake(stake);
+        await stakingReward.connect(secondStaker).setVestingConfig(true);
+
+        await mineBlock(provider, vestingEndTime.add(rewardEndTime).add(1).toNumber());
+
+        //unstake
+        await stakingReward.connect(staker).exit();
+        await stakingReward.connect(secondStaker).exit();
+
+        const rewardAmount = await rewardToken.balanceOf(staker.address);
+        const secondRewardAmount = await rewardToken.balanceOf(secondStaker.address);
+        const totalReward = rewardAmount.add(secondRewardAmount);
+
+
+        // ensure result are within 0.01%
+        expect(reward.sub(totalReward).lte(reward.div(10000))).to.be.true;
+        expect(totalReward.mul(3).div(4).sub(rewardAmount).lte(totalReward.mul(3).div(4).div(10000)));
+        expect(totalReward.div(4).sub(secondRewardAmount).lte(totalReward.div(4).div(10000)));
     });
 })

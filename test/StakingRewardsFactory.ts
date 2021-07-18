@@ -9,7 +9,7 @@ import StakingReward from '../build/contracts/StakingReward.json';
 
 chai.use(solidity);
 
-context("StakingRewardsFactory create factory", async() => {
+xcontext("StakingRewardsFactory create factory", async() => {
     const provider = new MockProvider({
         ganacheOptions: {
             hardfork: 'istanbul',

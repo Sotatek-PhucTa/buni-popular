@@ -5,7 +5,9 @@ import { solidity, deployContract } from 'ethereum-waffle';
 import { expandTo18Decimals, SPLIT, VESTING, REWARD_DURATION } from './util';
 
 import TestBEP20 from '../build/contracts/TestBEP20.json';
+import UniswapV2ERC20 from '@uniswap/v2-core/build/ERC20.json';
 import StakingRewardsFactory from '../build/contracts/StakingRewardsFactory.json';
+import StakingReward from '../build/contracts/StakingReward.json';
 
 chai.use(solidity);
 
@@ -15,6 +17,23 @@ interface StakingRewardsFixture {
     stakingReward: Contract,
     rewardToken: Contract,
     stakingToken: Contract
+}
+
+export async function stakingRewardFixture([wallet]: Wallet[]): Promise<StakingRewardsFixture> {
+    const rewardDistributor = wallet.address;
+    const rewardToken = await deployContract(wallet, TestBEP20, [expandTo18Decimals(1000000)]);
+    const stakingToken = await deployContract(wallet, UniswapV2ERC20, [expandTo18Decimals(1000000)]);
+
+    const stakingReward = await deployContract(wallet, StakingReward, [
+        rewardDistributor,
+        rewardToken.address,
+        stakingToken.address,
+        REWARD_DURATION,
+        VESTING,
+        SPLIT
+    ]);
+
+    return { stakingReward, rewardToken, stakingToken };
 }
 
 interface StakingRewardsFactoryFixture {

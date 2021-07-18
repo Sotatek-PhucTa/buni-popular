@@ -1,4 +1,4 @@
-pragma solidity=0.8.4;
+pragma solidity=0.6.11;
 interface IUniswapV2ERC20 {
     function permit(
         address owner,

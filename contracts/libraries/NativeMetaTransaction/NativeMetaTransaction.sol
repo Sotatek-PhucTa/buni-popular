@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.11;
+pragma solidity =0.6.11;
 
 import '@pancakeswap/pancake-swap-lib/contracts/math/SafeMath.sol';
 import './EIP712Base.sol';

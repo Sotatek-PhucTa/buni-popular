@@ -1,4 +1,4 @@
-pragma solidity=0.8.4;
+pragma solidity=0.6.11;
 
 import "@pancakeswap/pancake-swap-lib/contracts/token/BEP20/IBEP20.sol";
 import "@pancakeswap/pancake-swap-lib/contracts/access/Ownable.sol";
@@ -21,15 +21,15 @@ contract StakingRewardsFactory is Ownable {
 
     address[] public stakingTokens;
 
-    mapping(address => StakingRewardsInfo) public stakingRewardsByStakingToken;
+    mapping(address => StakingRewardsInfo) public stakingRewardInfosByStakingToken;
 
     /*===========================CONSTRUCTORS===========================*/
-    constructor(address _rewardToken, uint256 _stakingRewardsGenenis) {
-        require(_stakingRewardsGenesis >= block.timestamp, "genesis too soon");
+    constructor(address _rewardToken, uint256 _stakingRewardGenesis) public {
+        require(_stakingRewardGenesis >= block.timestamp, "genesis too soon");
         require(_rewardToken != address(0), "Zero rewardToken");
         
         rewardToken = _rewardToken;
-        stakingRewardGenesis = _stakingRewardsGenenis;
+        stakingRewardGenesis = _stakingRewardGenesis;
     }
 
     function deploy(
@@ -40,7 +40,7 @@ contract StakingRewardsFactory is Ownable {
         uint256 split
     ) public onlyOwner {
         require(stakingToken != address(0), "Zero stakingToken");
-        StakingRewardsInfo storage info = stakingRewardsByStakingToken[stakingToken];
+        StakingRewardsInfo storage info = stakingRewardInfosByStakingToken[stakingToken];
         require(info.stakingRewards == address(0), "already deployed"); 
 
         info.stakingRewards = address(
@@ -68,9 +68,9 @@ contract StakingRewardsFactory is Ownable {
     }
 
     function notifyRewardAmount(address stakingToken) public {
-        require(block.timestamp >= stakingRewardsGenesis, 'not ready');
+        require(block.timestamp >= stakingRewardGenesis, 'not ready');
 
-        StakingRewardsInfo storage info = stakingRewardsInfoByStakingToken[stakingToken];
+        StakingRewardsInfo storage info = stakingRewardInfosByStakingToken[stakingToken];
         require(info.stakingRewards != address(0), 'not deployed');
 
         if (info.rewardAmount > 0) {
@@ -78,7 +78,7 @@ contract StakingRewardsFactory is Ownable {
             info.rewardAmount = 0;
 
             require(
-                IBEP20(rewardsToken).transfer(info.stakingRewards, rewardAmount),
+                IBEP20(rewardToken).transfer(info.stakingRewards, rewardAmount),
                 'transfer failed'
             );
             StakingReward(info.stakingRewards).notifyRewardAmount(rewardAmount);
@@ -86,13 +86,13 @@ contract StakingRewardsFactory is Ownable {
     }
 
     function rescueFunds(address stakingToken, address tokenAddress) public onlyOwner {
-        StakingRewardsInfo storage info = stakingRewardsInfoByStakingToken[stakingToken];
+        StakingRewardsInfo storage info = stakingRewardInfosByStakingToken[stakingToken];
         require(info.stakingRewards != address(0), 'not deployed');
         StakingReward(info.stakingRewards).rescueFunds(tokenAddress, msg.sender);
     }
 
     function rescueBurnableFunds(address stakingToken) public onlyOwner {
-        StakingRewardsInfo storage info = stakingRewardsInfoByStakingToken[stakingToken];
+        StakingRewardsInfo storage info = stakingRewardInfosByStakingToken[stakingToken];
         require(info.stakingRewards != address(0), 'not deployed');
         StakingReward(info.stakingRewards).rescueBurnableFunds(msg.sender);
     }

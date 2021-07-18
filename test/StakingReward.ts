@@ -55,6 +55,18 @@ context('StakingReward', async() => {
         return { startTime, vestingEndTime, rewardEndTime, totalSplits, splitWindow };
     }
 
+    it('Stake and contract has correct state', async() => {
+        const stake = expandTo18Decimals(2);
+        await stakingToken.transfer(staker.address, stake);
+        await stakingToken.connect(staker).approve(stakingReward.address, stake);
+        await stakingReward.connect(staker).stake(stake);
+
+        const totalSupply = await stakingReward.totalSupply();
+        const balance = await stakingReward.balanceOf(staker.address);
+        expect(totalSupply).to.be.eq(stake);
+        expect(balance).to.be.eq(stake);
+    })
+
     it('notifyRewardAmounts: take half, burn rest', async() => {
         // stake with staker
         const stake = expandTo18Decimals(2);
@@ -75,6 +87,29 @@ context('StakingReward', async() => {
 
         expect(rewardAmount).to.be.eq(reward.div(REWARD_DURATION).mul(REWARD_DURATION).div(2));
     });
+
+    it('stake and withdraw after half of time', async() => {
+        const stake = expandTo18Decimals(2);
+        await stakingToken.transfer(staker.address, stake);
+        await stakingToken.connect(staker).approve(stakingReward.address, stake);
+        await stakingReward.connect(staker).stake(stake);
+
+        const { startTime, vestingEndTime, rewardEndTime } = await start(reward);
+
+        await mineBlock(provider, startTime.add(rewardEndTime.sub(startTime).div(2)).toNumber());
+        await stakingReward.connect(staker).withdraw(stake.div(2));
+
+        const stakeBalance = await stakingReward.balanceOf(staker.address);
+        expect(stakeBalance).to.be.eq(stake.sub(stake.div(2)));
+        const totalSupply = await stakingReward.totalSupply();
+        expect(totalSupply).to.be.eq(stakeBalance);
+
+        await mineBlock(provider, rewardEndTime.add(vestingEndTime).add(1).toNumber());
+        await stakingReward.connect(staker).getReward();
+        const rewardBalance = await rewardToken.balanceOf(staker.address);
+        expect(rewardBalance).to.be.eq(reward.div(REWARD_DURATION).mul(REWARD_DURATION));
+
+    })
 
     it('Cannot change config after claim', async() => {
         const stake = expandTo18Decimals(2);
@@ -154,6 +189,53 @@ context('StakingReward', async() => {
         expect(rewardAmount).to.be.eq(reward.div(REWARD_DURATION).mul(REWARD_DURATION));
     });
 
+
+    context('get part of reward after a release', async() => {
+        let rewardEndTime: BigNumber;
+        let splitWindow: BigNumber;
+        beforeEach(async() => {
+            const stake = expandTo18Decimals(2);
+            await stakingToken.transfer(staker.address, stake);
+            await stakingToken.connect(staker).approve(stakingReward.address, stake);
+            await stakingReward.connect(staker).stake(stake);
+            ({ rewardEndTime, splitWindow } =  await start(reward)) ;
+        });
+        it('First', async() => {
+            await mineBlock(provider, rewardEndTime.toNumber());
+            await stakingReward.connect(staker).getReward();
+            const rewardBalance = await rewardToken.balanceOf(staker.address);
+            expect(rewardBalance).to.be.eq(reward.div(REWARD_DURATION).mul(REWARD_DURATION).div(SPLIT));
+            const stakerSplit = await stakingReward.hasClaimed(staker.address);
+            expect(stakerSplit).to.be.eq(1);
+        });
+
+        it('Second', async() => {
+            await mineBlock(provider, rewardEndTime.add(splitWindow).toNumber());
+            await stakingReward.connect(staker).getReward();
+            const rewardBalance = await rewardToken.balanceOf(staker.address);
+            expect(rewardBalance).to.be.eq(reward.div(REWARD_DURATION).mul(REWARD_DURATION).mul(2).div(SPLIT));
+            const stakerSplit = await stakingReward.hasClaimed(staker.address);
+            expect(stakerSplit).to.be.eq(2);
+        });
+
+        it('Third', async() => {
+            await mineBlock(provider, rewardEndTime.add(splitWindow.mul(2)).toNumber());
+            await stakingReward.connect(staker).getReward();
+            const rewardBalance = await rewardToken.balanceOf(staker.address);
+            expect(rewardBalance).to.be.eq(reward.div(REWARD_DURATION).mul(REWARD_DURATION).mul(3).div(SPLIT));
+            const stakerSplit = await stakingReward.hasClaimed(staker.address);
+            expect(stakerSplit).to.be.eq(3);
+        });
+
+        it('Forth', async() => {
+            await mineBlock(provider, rewardEndTime.add(splitWindow.mul(3)).toNumber());
+            await stakingReward.connect(staker).getReward();
+            const rewardBalance = await rewardToken.balanceOf(staker.address);
+            expect(rewardBalance).to.be.eq(reward.div(REWARD_DURATION).mul(REWARD_DURATION).mul(4).div(SPLIT));
+            const stakerSplit = await stakingReward.hasClaimed(staker.address);
+            expect(stakerSplit).to.be.eq(4);
+        });
+    })
     it('Get reward after each release', async() => {
         const stake = expandTo18Decimals(2);
         await stakingToken.transfer(staker.address, stake);

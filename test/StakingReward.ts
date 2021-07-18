@@ -1,12 +1,11 @@
 import chai, { expect } from 'chai';
 import { Contract, BigNumber, constants } from 'ethers';
-import { solidity, MockProvider, createFixtureLoader, deployContract } from 'ethereum-waffle';
+import { solidity, MockProvider, createFixtureLoader } from 'ethereum-waffle';
 import { ecsign } from 'ethereumjs-util';
 
 import { stakingRewardFixture } from './fixtures';
-import { REWARD_DURATION, VESTING, expandTo18Decimals, mineBlock, getApprovalDigest, SPLIT } from './util';
+import { REWARD_DURATION, expandTo18Decimals, mineBlock, getApprovalDigest, SPLIT } from './util';
 
-import StakingReward from '../build/contracts/StakingReward.json';
 
 chai.use(solidity);
 
@@ -334,4 +333,31 @@ context('StakingReward', async() => {
         expect(totalReward.mul(3).div(4).sub(rewardAmount).lte(totalReward.mul(3).div(4).div(10000)));
         expect(totalReward.div(4).sub(secondRewardAmount).lte(totalReward.div(4).div(10000)));
     });
+
+    it('Two stakers and one withdraw after half of time', async() => {
+        const stake = expandTo18Decimals(4);
+        
+        await stakingToken.transfer(staker.address, stake);
+        await stakingToken.connect(staker).approve(stakingReward.address, stake);
+        await stakingReward.connect(staker).stake(stake);
+        
+        await stakingToken.transfer(secondStaker.address, stake);
+        await stakingToken.connect(secondStaker).approve(stakingReward.address, stake);
+        await stakingReward.connect(secondStaker).stake(stake);
+
+        const { startTime, vestingEndTime, rewardEndTime } = await start(reward);
+
+        await mineBlock(provider, startTime.add(rewardEndTime.sub(startTime).div(2)).toNumber());
+        await stakingReward.connect(staker).withdraw(expandTo18Decimals(3));
+
+        await mineBlock(provider, vestingEndTime.add(rewardEndTime).add(1).toNumber());
+        await stakingReward.connect(staker).getReward();
+        await stakingReward.connect(secondStaker).getReward();
+        const stakerBalance = await rewardToken.balanceOf(staker.address);
+        const secondStakerBalance = await rewardToken.balanceOf(secondStaker.address);
+
+        const actualRewarded = reward.div(REWARD_DURATION).mul(REWARD_DURATION);
+        expect(stakerBalance).to.be.eq(actualRewarded.div(4).add(actualRewarded.div(2).div(5)));
+        expect(secondStakerBalance).to.be.eq(actualRewarded.div(4).add(actualRewarded.div(2).mul(4).div(5)));
+    })
 })

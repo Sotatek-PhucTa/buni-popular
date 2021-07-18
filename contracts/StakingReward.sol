@@ -78,7 +78,7 @@ contract StakingReward is IStakingReward, RewardsDistributionRecipient, Reentran
         rewardDuration = _rewardDuration;
         vestingPeriod = _vestingPeriod;
         split = _split;
-        splitWindow = _vestingPeriod.div(_split);
+        splitWindow = _vestingPeriod.div(_split - 1);
         _initializeEIP712("PopularV1");
     }
 

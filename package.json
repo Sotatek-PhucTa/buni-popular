@@ -1,6 +1,9 @@
 {
   "dependencies": {
     "@pancakeswap/pancake-swap-lib": "^0.0.4",
+    "@truffle/hdwallet-provider": "^1.4.1",
+    "truffle": "^5.4.1",
+    "truffle-plugin-verify": "^0.5.11",
     "ts-node": "^10.1.0",
     "typescript": "^4.3.5"
   },

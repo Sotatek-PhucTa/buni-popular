@@ -3,3 +3,4 @@ build/
 node_modules/
 >>>>>>> e55151b5571ac32872745fa604665b29177f703d
 package-lock.json
+config/sys_config.json

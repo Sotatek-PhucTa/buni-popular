@@ -26,7 +26,21 @@
 require("ts-node").register({
   files: true,
 });
+
+const fs = require("fs");
+
+const HDWalletProvider = require("@truffle/hdwallet-provider");
+const MNEMONIC = JSON.parse(fs.readFileSync(__dirname + '/config/sys_config.json', "utf8"))["mnemonic"].trim();
+const api = JSON.parse(fs.readFileSync(__dirname + '/config/sys_config.json', "utf8"))["kovan_api"].trim();
+const scanKey = JSON.parse(fs.readFileSync(__dirname + '/config/sys_config.json', "utf8"))["ether_scan_key"].trim();
+
 module.exports = {
+    plugins: [
+        'truffle-plugin-verify'
+    ],
+    api_keys: {
+    etherscan: scanKey
+  },
   /**
    * Networks define how you connect to your ethereum client and let you set the
    * defaults web3 uses to send transactions. If you don't specify one truffle
@@ -49,6 +63,13 @@ module.exports = {
       port: 8545,            // Standard Ethereum port (default: none)
       network_id: "*",       // Any network (default: none)
      },
+     kovan: {
+      networkCheckTimeout: 100000,
+      provider: function() {
+        return new HDWalletProvider(MNEMONIC, api);
+      },
+      network_id: 42,
+    }
     // Another network with more advanced options...
     // advanced: {
     // port: 8777,             // Custom port

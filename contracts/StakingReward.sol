@@ -120,6 +120,10 @@ contract StakingReward is IStakingReward, RewardsDistributionRecipient, Reentran
         return vestingInfoByUser[account];
     }
 
+    function availableReward(address account) external view override returns (uint256) {
+
+    }
+
     /*=============================MUTATIVE FUNCTIONS===============================*/
     
     function stakeWithPermit(uint256 amount, uint256 deadline, uint8 v, bytes32 r, bytes32 s)

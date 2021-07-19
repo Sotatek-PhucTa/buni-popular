@@ -1,0 +1,160 @@
+{
+    "kovan": [
+        {
+            "staking_token": "0x9e305ed7aa6ab2fe5f64964f82b14c1e6a03557d",
+            "name": "BUNI-WETH",
+            "available": true,
+            "reward_amount": "6000000000000000000000",
+            "reward_duration": 600,
+            "vesting_period": 1800,
+            "splits": 4
+        },
+        {
+            "staking_token": "0x0022a9efbb09a67be9c2a5f29ca59fbcabbcab48",
+            "name": "BUNI-BUSD",
+            "available": false,
+            "reward_amount": "600000000000000000000",
+            "reward_duration": 1296000,
+            "vesting_period": 1200,
+            "splits": 4,
+            "claimable": 20 
+        },
+        {
+            "staking_token": "0xf659aaeb52bdedbb32a4abd9c8061d57e305c8a3",
+            "name": "BUNI-WETH",
+            "available": false,
+            "reward_amount": "600000000000000000000",
+            "reward_duration": 1296000,
+            "vesting_period": 1200,
+            "splits": 4,
+            "claimable": 20 
+
+        }
+    ],
+    "bsc_test": [
+        {
+            "staking_token": "0xf659aaeb52bdedbb32a4abd9c8061d57e305c8a3",
+            "name": "BUNI-WETH",
+            "available": true,
+            "reward_amount": "600000000000000000000",
+            "reward_duration": 1296000,
+            "vesting_period": 1200,
+            "splits": 4,
+            "claimable": 20 
+
+        }
+    ],
+    "bsc_main": [
+        {
+            "staking_token": "",
+            "name": "BUNI-WBNB",
+            "available": false,
+            "reward_amount": "3240000000000000000000000",
+            "reward_duration": 1296000,
+            "vesting_period": 10368000,
+            "splits": 4,
+            "claimable": 20 
+        },
+        {
+            "staking_token": "0x42612b419E31F6a74b81Ba627C7d8d5e325D6758",
+            "name": "BUSD-USDT",
+            "available": true,
+            "reward_amount": "1620000000000000000000000",
+            "reward_duration": 1296000,
+            "vesting_period": 10368000,
+            "splits": 4,
+            "claimable": 20 
+        },
+        {
+            "staking_token": "0x4a9f3f821590fC22bD682e829656596C29749328",
+            "name": "BUSD-USDC",
+            "available": true,
+            "reward_amount": "1620000000000000000000000",
+            "reward_duration": 1296000,
+            "vesting_period": 10368000,
+            "splits": 4,
+            "claimable": 20 
+        },
+        {
+            "staking_token": "0xb05697B07E87e57d96FF9802869a410aD6162777",
+            "name": "USDC-USDT",
+            "available": true,
+            "reward_amount": "1620000000000000000000000",
+            "reward_duration": 1296000,
+            "vesting_period": 10368000,
+            "splits": 4,
+            "claimable": 20 
+        },
+        {
+            "staking_token": "0x9131Eef9437Cb2f519273a1e3B92CC8bE33E794E",
+            "name": "BUSD-WBNB",
+            "available": true,
+            "reward_amount": "1620000000000000000000000",
+            "reward_duration": 1296000,
+            "vesting_period": 10368000,
+            "splits": 4,
+            "claimable": 20 
+        },
+        {
+            "staking_token": "0xa437baFC1150015774864178E1b479a64A6c0D83",
+            "name": "USDT-WBNB",
+            "available": true,
+            "reward_amount": "1620000000000000000000000",
+            "reward_duration": 1296000,
+            "vesting_period": 10368000,
+            "splits": 4,
+            "claimable": 20 
+        },
+        {
+            "staking_token": "0xC1520E2A5dE4b5B8f1bbf6576caB6fa1B8380fCF",
+            "name": "ETH-WBNB",
+            "available": true,
+            "reward_amount": "1620000000000000000000000",
+            "reward_duration": 1296000,
+            "vesting_period": 10368000,
+            "splits": 4,
+            "claimable": 20 
+        },
+        {
+            "staking_token": "0x688047B695f3746022d2caf129A9DC86A9538Ebf",
+            "name": "BTCB-ETH",
+            "available": true,
+            "reward_amount": "1620000000000000000000000",
+            "reward_duration": 1296000,
+            "vesting_period": 10368000,
+            "splits": 4,
+            "claimable": 20 
+        },
+
+        {
+            "staking_token": "0x9b7cfb301b38032bA5c25B7f77a9F0a22406a2Bb",
+            "name": "BTCB-WBNB",
+            "available": true,
+            "reward_amount": "1620000000000000000000000",
+            "reward_duration": 1296000,
+            "vesting_period": 10368000,
+            "splits": 4,
+            "claimable": 20 
+        },
+        {
+            "staking_token": "0x9E9B36445e42654157dc15Ae7AFC5F98914Fe1c3",
+            "name": "DOT-WBNB",
+            "available": true,
+            "reward_amount": "1620000000000000000000000",
+            "reward_duration": 1296000,
+            "vesting_period": 10368000,
+            "splits": 4,
+            "claimable": 20 
+        },        
+        {
+            "staking_token": "0xb9aB3e5a73986D41278227bCeA4d8C0CaB7488C7",
+            "name": "LINK-WBNB",
+            "available": true,
+            "reward_amount": "1620000000000000000000000",
+            "reward_duration": 1296000,
+            "vesting_period": 10368000,
+            "splits": 4,
+            "claimable": 20 
+        }
+    ]
+}

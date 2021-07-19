@@ -7,7 +7,7 @@ import "@pancakeswap/pancake-swap-lib/contracts/token/BEP20/SafeBEP20.sol";
 import "./interfaces/IUniswapV2ERC20.sol";
 
 // Inheritance
-import "@pancakeswap/pancake-swap-lib/contracts/utils/ReentrancyGuard.sol";
+import '@pancakeswap/pancake-swap-lib/contracts/utils/ReentrancyGuard.sol';
 import './interfaces/IStakingReward.sol';
 import './RewardsDistributionRecipient.sol';
 import "./libraries/NativeMetaTransaction/NativeMetaTransaction.sol";
@@ -121,7 +121,30 @@ contract StakingReward is IStakingReward, RewardsDistributionRecipient, Reentran
     }
 
     function availableReward(address account) external view override returns (uint256) {
+        uint256 currentDate = block.timestamp;
+        if (currentDate < periodFinish)
+            return 0;
+        uint256 currentSplit;
+        uint256 userSplit;
+        uint256 totalEarned;
+        UserVestingInfo memory info = vestingInfoByUser[account];
 
+        if (totalEarnedRewards[account] != 0)
+            totalEarned = totalEarnedRewards[account];
+        else
+            totalEarned = earned(account);
+
+        // First strategy
+        if (!info.hasSetConfig || info.hasOptForVesting) {
+            currentSplit = currentDate.sub(periodFinish).div(splitWindow).add(1);
+            if (currentSplit > split)
+                currentSplit = split;
+            
+            userSplit = hasClaimed[account];
+            return totalEarned.mul(currentSplit.sub(userSplit)).div(split);
+        } else {
+            return totalEarned.div(2);
+        }
     }
 
     /*=============================MUTATIVE FUNCTIONS===============================*/

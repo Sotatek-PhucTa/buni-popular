@@ -106,7 +106,8 @@ context('StakingReward', async() => {
         await mineBlock(provider, rewardEndTime.add(vestingEndTime).add(1).toNumber());
         await stakingReward.connect(staker).getReward();
         const rewardBalance = await rewardToken.balanceOf(staker.address);
-        expect(rewardBalance).to.be.eq(reward.div(REWARD_DURATION).mul(REWARD_DURATION));
+        expect(rewardBalance.sub(reward.div(REWARD_DURATION).mul(REWARD_DURATION))).lte(rewardBalance.div(10000));
+        //expect(rewardBalance).to.be.eq(reward.div(REWARD_DURATION).mul(REWARD_DURATION));
 
     })
 
@@ -252,6 +253,52 @@ context('StakingReward', async() => {
             expect(newBalance.sub(oldBalance)).to.be.eq(reward.div(REWARD_DURATION).mul(REWARD_DURATION).div(totalSplits));
         }
 
+    });
+
+    context('#Check availableReward', async() => {
+        let rewardEndTime: BigNumber;
+        let totalSplits: BigNumber;
+        let splitWindow: BigNumber;
+        let vestingEndTime: BigNumber;
+        beforeEach(async() => {
+            const stake = expandTo18Decimals(2);
+            await stakingToken.transfer(staker.address, stake);
+            await stakingToken.connect(staker).approve(stakingReward.address, stake);
+            await stakingReward.connect(staker).stake(stake);
+            ({ vestingEndTime, rewardEndTime, totalSplits, splitWindow } = await start(reward));
+        });
+
+        it('Set hasOptForVesting = false', async() => {
+            await stakingReward.connect(staker).setVestingConfig(false);
+            await mineBlock(provider, rewardEndTime.add(vestingEndTime).add(1).toNumber());
+            const available1 = await stakingReward.availableReward(staker.address);
+            expect(available1).to.be.eq(reward.div(REWARD_DURATION).mul(REWARD_DURATION).div(2));
+            await stakingReward.connect(staker).getReward();
+            const available2 = await stakingReward.availableReward(staker.address);
+            expect(available2).to.be.eq(0);
+        });
+
+        it('Dont set hasOptForVesting, and dont get reward each release', async() => {
+
+            await mineBlock(provider, rewardEndTime.sub(1).toNumber());
+            const actualRewarded = reward.div(REWARD_DURATION).mul(REWARD_DURATION);
+            expect(await stakingReward.availableReward(staker.address)).to.be.eq(0);
+            for (let i = 0; i < totalSplits.toNumber(); i++) {
+                await mineBlock(provider, rewardEndTime.add(splitWindow.mul(i)).toNumber());
+                const available = await stakingReward.availableReward(staker.address);
+                expect(available).to.be.eq(actualRewarded.mul(i + 1).div(totalSplits));
+            } 
+        });
+        
+        it('Dont set hasOptForVesting, and get reward after each release', async() => {
+            const actualRewarded = reward.div(REWARD_DURATION).mul(REWARD_DURATION);
+            for (let i = 0; i < totalSplits.toNumber(); i++) {
+                await mineBlock(provider, rewardEndTime.add(splitWindow.mul(i)).toNumber());
+                const available = await stakingReward.availableReward(staker.address);
+                expect(available).to.be.eq(actualRewarded.div(totalSplits));
+                await stakingReward.connect(staker).getReward();
+            } 
+        });
     })
 
     it('stake with permit', async() => {
@@ -357,7 +404,9 @@ context('StakingReward', async() => {
         const secondStakerBalance = await rewardToken.balanceOf(secondStaker.address);
 
         const actualRewarded = reward.div(REWARD_DURATION).mul(REWARD_DURATION);
-        expect(stakerBalance).to.be.eq(actualRewarded.div(4).add(actualRewarded.div(2).div(5)));
-        expect(secondStakerBalance).to.be.eq(actualRewarded.div(4).add(actualRewarded.div(2).mul(4).div(5)));
+        const actualFirst = actualRewarded.div(4).add(actualRewarded.div(2).div(5));
+        const actualSecond = actualRewarded.div(4).add(actualRewarded.div(2).mul(4).div(5));
+        expect(stakerBalance.sub(actualFirst)).lte(stakerBalance.div(10000));
+        expect(secondStakerBalance.sub(actualSecond)).lte(secondStakerBalance.div(10000));
     })
 })

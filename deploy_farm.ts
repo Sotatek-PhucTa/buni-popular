@@ -1,6 +1,7 @@
 import Web3 from "web3";
 import fs from "fs";
 import HDWalletProviders from "@truffle/hdwallet-provider";
+import {BigNumber} from "ethers";
 
 
 const config = JSON.parse(fs.readFileSync("./config/sys_config.json", "utf-8"));
@@ -19,6 +20,14 @@ const factoryContractAbi = getAbi("./build/contracts/StakingRewardsFactory.json"
 
 const factoryContract = new web3.eth.Contract(factoryContractAbi, factoryAddress); 
 
+function convertToStandard(x: number | string | BigNumber) {
+    if (typeof(x) === 'string')
+        return "0".repeat(24) + x.slice(2);
+    else {
+        const tx = x.toString(16);
+        return "0".repeat(64 - tx.length) + tx;
+    }
+}
 async function deployNewFarm(farmInfo: any, accountAddress: string) {
     if (!farmInfo["available"])
         return;
@@ -43,6 +52,8 @@ async function deployNewFarm(farmInfo: any, accountAddress: string) {
     const farmDeployedInfo = await 
         factoryContract.methods.stakingRewardInfosByStakingToken(farmInfo["staking_token"])
         .call({from: accountAddress});
+
+    
     
     console.log("Deployed farm " );
     console.log(farmDeployedInfo);

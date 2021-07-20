@@ -287,7 +287,11 @@ context('StakingReward', async() => {
                 await mineBlock(provider, rewardEndTime.add(splitWindow.mul(i)).toNumber());
                 const available = await stakingReward.availableReward(staker.address);
                 expect(available).to.be.eq(actualRewarded.mul(i + 1).div(totalSplits));
-            } 
+            }
+
+            await mineBlock(provider, rewardEndTime.add(splitWindow.mul(100)).toNumber());
+            const available = await stakingReward.availableReward(staker.address);
+            expect(available).to.be.eq(actualRewarded);
         });
         
         it('Dont set hasOptForVesting, and get reward after each release', async() => {

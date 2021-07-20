@@ -7,6 +7,7 @@ import {BigNumber} from "ethers";
 const config = JSON.parse(fs.readFileSync("./config/sys_config.json", "utf-8"));
 const privateKey = config["mnemonic"].trim();
 const factoryAddress = config["factory_address"].trim();
+const rewardToken = config['reward_kovan'].trim();
 // const api = config["kovan_api"].trim();
 const api = config["kovan_api"].trim();
 const web3 = new Web3(new HDWalletProviders(privateKey, api));
@@ -53,7 +54,15 @@ async function deployNewFarm(farmInfo: any, accountAddress: string) {
         factoryContract.methods.stakingRewardInfosByStakingToken(farmInfo["staking_token"])
         .call({from: accountAddress});
 
-    
+    let verifyArguments = '';
+    verifyArguments += convertToStandard(factoryAddress)
+    verifyArguments += convertToStandard(rewardToken);
+    verifyArguments += convertToStandard(farmInfo['staking_token']);
+    verifyArguments += convertToStandard(farmInfo['reward_duration']);
+    verifyArguments += convertToStandard(farmInfo['vesting_period']);
+    verifyArguments += convertToStandard(farmInfo['splits']);
+
+    console.log(verifyArguments);
     
     console.log("Deployed farm " );
     console.log(farmDeployedInfo);
